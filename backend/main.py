@@ -6,7 +6,7 @@ from backend.api.mentor import router as mentor_router
 from backend.api.quiz import router as quiz_router
 from backend.api.upload import router as upload_router
 
-app = FastAPI(title="Jarvis AI Study Agent", version="1.1.0")
+app = FastAPI(title="Jarvis AI Study Agent", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
