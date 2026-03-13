@@ -5,6 +5,8 @@ from backend.api.auth import router as auth_router
 from backend.api.mentor import router as mentor_router
 from backend.api.quiz import router as quiz_router
 from backend.api.upload import router as upload_router
+from backend.api.notes import router as notes_router
+from backend.api.question_paper import router as question_router
 
 app = FastAPI(title="Jarvis AI Study Agent", version="1.2.0")
 
@@ -20,6 +22,8 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(upload_router, prefix="/api/upload", tags=["upload"])
 app.include_router(quiz_router, prefix="/api/quiz", tags=["quiz"])
 app.include_router(mentor_router, prefix="/api/mentor", tags=["mentor"])
+app.include_router(notes_router, prefix="/api/notes", tags=["notes"])
+app.include_router(question_router, prefix="/api/question-paper", tags=["question-paper"])
 
 
 @app.get("/")
