@@ -14,17 +14,19 @@ notes_service = NotesGenerator()
 def analyze_paper(text: str, score: float = 60):
 
     # Step 1: extract questions
-    questions = parser.extract_questions(text)
+    questions = parser.parse_questions(text)
 
     # Step 2: analyze exam readiness
     analysis = exam_service.analyze(
         topic="Exam Paper",
         score=score,
-        weak_areas=questions[:3] if questions else []
+        weak_areas=[q['question' for q in questions[:3] if questions else []
     )
 
     # Step 3: generate notes
-    notes = notes_service.generate_summary("Exam Paper")
+    notes = notes_service.generate_summary(
+        topic ="Exam Preparation",
+        content = text)
 
     return {
         "questions_detected": questions,
