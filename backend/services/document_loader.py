@@ -1,4 +1,4 @@
-"""Utilities for loading and indexing user-uploaded documents."""
+"""Utilities for loading and indexing user-uploaded documents for AI tutor queries."""
 
 from __future__ import annotations
 
@@ -6,18 +6,42 @@ import logging
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import DefaultDict, List
+from typing import Callable, DefaultDict, Dict, List, Protocol
 from xml.etree import ElementTree
 from zipfile import ZipFile
 
 logger = logging.getLogger(__name__)
 
-# In-memory index for quick retrieval. This can later be replaced by a DB/vector store.
-DOCUMENT_INDEX: DefaultDict[str, List[str]] = defaultdict(list)
-
 
 class DocumentLoaderError(Exception):
-    """Raised when document loading fails."""
+    """Raised when document loading or indexing fails."""
+
+
+class DocumentStore(Protocol):
+    """Storage interface used by :func:`index_document` for extensibility."""
+
+    def add(self, user_id: str, content: str) -> None: ...
+
+
+class InMemoryDocumentStore:
+    """Simple in-memory store for per-user text entries."""
+
+    def __init__(self) -> None:
+        self._documents: DefaultDict[str, List[str]] = defaultdict(list)
+
+    def add(self, user_id: str, content: str) -> None:
+        self._documents[user_id].append(content)
+
+    def get(self, user_id: str) -> List[str]:
+        return list(self._documents.get(user_id, []))
+
+    def clear(self) -> None:
+        self._documents.clear()
+
+
+# Public in-memory index for quick retrieval. Can be replaced with DB/vector storage later.
+STORE = InMemoryDocumentStore()
+DOCUMENT_INDEX = STORE._documents
 
 
 def _clean_text(text: str) -> str:
@@ -38,7 +62,7 @@ def _read_docx(file_path: Path) -> str:
 
     root = ElementTree.fromstring(document_xml)
     namespace = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-    paragraphs = []
+    paragraphs: List[str] = []
 
     for paragraph in root.findall(".//w:p", namespace):
         texts = [node.text for node in paragraph.findall(".//w:t", namespace) if node.text]
@@ -62,6 +86,13 @@ def _read_pdf(file_path: Path) -> str:
     return "\n\n".join(page_text)
 
 
+READERS: Dict[str, Callable[[Path], str]] = {
+    ".txt": _read_txt,
+    ".docx": _read_docx,
+    ".pdf": _read_pdf,
+}
+
+
 def load_document(file_path: str) -> str:
     """Load a PDF, DOCX, or TXT file and return cleaned text content."""
     path = Path(file_path)
@@ -72,19 +103,13 @@ def load_document(file_path: str) -> str:
     extension = path.suffix.lower()
     logger.info("Loading uploaded file '%s' with extension '%s'", path.name, extension)
 
-    readers = {
-        ".txt": _read_txt,
-        ".docx": _read_docx,
-        ".pdf": _read_pdf,
-    }
-
-    if extension not in readers:
+    if extension not in READERS:
         raise DocumentLoaderError(
             f"Unsupported file type '{extension}'. Supported formats: PDF, DOCX, TXT"
         )
 
     try:
-        raw_text = readers[extension](path)
+        raw_text = READERS[extension](path)
     except DocumentLoaderError:
         raise
     except Exception as exc:
@@ -96,12 +121,27 @@ def load_document(file_path: str) -> str:
 
 
 def index_document(user_id: str, text_content: str) -> None:
-    """Store text content by user for future retrieval/querying."""
+    """Store cleaned text content by user for future retrieval/querying."""
+    if not user_id or not user_id.strip():
+        raise DocumentLoaderError("user_id cannot be empty")
+
     cleaned_text = _clean_text(text_content)
-    DOCUMENT_INDEX[user_id].append(cleaned_text)
+    if not cleaned_text:
+        raise DocumentLoaderError("text_content cannot be empty after cleaning")
+
+    STORE.add(user_id=user_id, content=cleaned_text)
     logger.info(
         "Indexed document content for user '%s' (entries=%d, chars=%d)",
         user_id,
-        len(DOCUMENT_INDEX[user_id]),
+        len(STORE.get(user_id)),
         len(cleaned_text),
     )
+
+
+__all__ = [
+    "DOCUMENT_INDEX",
+    "DocumentLoaderError",
+    "InMemoryDocumentStore",
+    "index_document",
+    "load_document",
+]
