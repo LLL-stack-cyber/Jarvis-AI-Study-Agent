@@ -22,7 +22,7 @@ def analyze_paper(text: str, score: float = 60):
     analysis = exam_service.analyze(
         topic="Exam Paper",
         score=score,
-        weak_areas=[q['question' for q in questions[:3] if questions else []
+        weak_areas = [q["question"] for q in questions[:3]] if questions else []
     )
 
     # Step 3: generate notes
