@@ -6,7 +6,7 @@ from backend.api.mentor import router as mentor_router
 from backend.api.quiz import router as quiz_router
 from backend.api.upload import router as upload_router
 from backend.api.notes import router as notes_router
-from backend.api.question_paper import router as question_router
+from backend.api.question_papers import router as question_router
 
 app = FastAPI(title="Jarvis AI Study Agent", version="1.2.0")
 
