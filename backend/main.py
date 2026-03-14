@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from api import mentor
 from backend.api.auth import router as auth_router
 from backend.api.mentor import router as mentor_router
 from backend.api.quiz import router as quiz_router
@@ -24,6 +24,7 @@ app.include_router(quiz_router, prefix="/api/quiz", tags=["quiz"])
 app.include_router(mentor_router, prefix="/api/mentor", tags=["mentor"])
 app.include_router(notes_router, prefix="/api/notes", tags=["notes"])
 app.include_router(question_router, prefix="/api/question-paper", tags=["question-paper"])
+app.include_router(mentor.router, prefix="/mentor", tags=["Mentor"])
 
 
 @app.get("/")
