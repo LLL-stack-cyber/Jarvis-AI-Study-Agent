@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api import mentor
+
 from backend.api.auth import router as auth_router
 from backend.api.mentor import router as mentor_router
 from backend.api.quiz import router as quiz_router
