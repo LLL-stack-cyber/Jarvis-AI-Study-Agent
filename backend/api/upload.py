@@ -11,7 +11,10 @@ class UploadResponse(BaseModel):
     user_id: str
     chunks_indexed: int
 
-
+@router.post("/upload")
+async def upload_file(file: UploadFile):
+    content = await file.read()
+    return {"message": "file received"}
 @router.post("/notes", response_model=UploadResponse)
 async def upload_notes(
     file: UploadFile = File(...),
