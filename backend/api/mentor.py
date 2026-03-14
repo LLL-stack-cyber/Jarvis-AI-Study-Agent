@@ -31,6 +31,9 @@ def mentor_chat(payload: MentorRequest) -> dict:
     )
     return {"answer": answer}
 
+@router.post("/ask")
+async def ask_mentor(question: str):
+    return mentor_ai.answer(question)
 
 @router.post("/exam-analysis")
 def analyze_exam(payload: ExamAnalysisRequest) -> dict:
